@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #1a1a2e;
+        }
+
+        .background img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .background img.active {
+            opacity: 1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .greeting {
+            font-size: clamp(2.5rem, 10vw, 6rem);
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
+            padding: 1rem;
+            transition: transform 0.2s ease, text-shadow 0.2s ease;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .greeting:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 0 2px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .greeting:active {
+            transform: scale(0.98);
+        }
+
+        .language {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 1;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .credit {
+            position: fixed;
+            bottom: 0.8rem;
+            right: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            z-index: 1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .credit:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .loading {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1;
+        }
+
+        .loading.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="background" id="background"></div>
+    <div class="overlay"></div>
+
+    <div class="content">
+        <div class="greeting" id="greeting">Hello World</div>
+        <div class="language" id="language">English</div>
+    </div>
+
+    <div class="hint">Click the text to translate</div>
+    <div class="loading" id="loading">Loading...</div>
+    <a class="credit" id="credit" href="#" target="_blank">Photo by Unsplash</a>
+
+    <script>
+        const translations = [
+            {
+                text: "Hello World",
+                language: "English",
+                image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920",
+                credit: "Photo by Benjamin Davies",
+                creditUrl: "https://unsplash.com/@bendavisual"
+            },
+            {
+                text: "Hola Mundo",
+                language: "Spanish",
+                image: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=1920",
+                credit: "Photo by Florian Wehde",
+                creditUrl: "https://unsplash.com/@florianwehde"
+            },
+            {
+                text: "Bonjour le Monde",
+                language: "French",
+                image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920",
+                credit: "Photo by Chris Karidis",
+                creditUrl: "https://unsplash.com/@chriskaridis"
+            },
+            {
+                text: "Hallo Welt",
+                language: "German",
+                image: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=1920",
+                credit: "Photo by Florian Wehde",
+                creditUrl: "https://unsplash.com/@florianwehde"
+            },
+            {
+                text: "Ciao Mondo",
+                language: "Italian",
+                image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1920",
+                credit: "Photo by Damiano Baschiera",
+                creditUrl: "https://unsplash.com/@damiano_baschiera"
+            },
+            {
+                text: "Olá Mundo",
+                language: "Portuguese",
+                image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=1920",
+                credit: "Photo by Daniel Seßler",
+                creditUrl: "https://unsplash.com/@danielsessler"
+            },
+            {
+                text: "Привет мир",
+                language: "Russian",
+                image: "https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920",
+                credit: "Photo by Nikolay Vorobyev",
+                creditUrl: "https://unsplash.com/@nikolayv"
+            },
+            {
+                text: "こんにちは世界",
+                language: "Japanese",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920",
+                credit: "Photo by Sorasak",
+                creditUrl: "https://unsplash.com/@banitstudio"
+            },
+            {
+                text: "你好世界",
+                language: "Chinese",
+                image: "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=1920",
+                credit: "Photo by Edward He",
+                creditUrl: "https://unsplash.com/@edwardhowellphotography"
+            },
+            {
+                text: "안녕하세요 세계",
+                language: "Korean",
+                image: "https://images.unsplash.com/photo-1538485399081-7191377e8241?w=1920",
+                credit: "Photo by Mathew Schwartz",
+                creditUrl: "https://unsplash.com/@cadophoto"
+            },
+            {
+                text: "مرحبا بالعالم",
+                language: "Arabic",
+                image: "https://images.unsplash.com/photo-1539768942893-daf53e448371?w=1920",
+                credit: "Photo by David Rodrigo",
+                creditUrl: "https://unsplash.com/@davidrodrigophoto"
+            },
+            {
+                text: "שלום עולם",
+                language: "Hebrew",
+                image: "https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=1920",
+                credit: "Photo by Shai Pal",
+                creditUrl: "https://unsplash.com/@shaipal"
+            },
+            {
+                text: "Γειά σου Κόσμε",
+                language: "Greek",
+                image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1920",
+                credit: "Photo by Jonathan Gallegos",
+                creditUrl: "https://unsplash.com/@jonathangallegos"
+            },
+            {
+                text: "Merhaba Dünya",
+                language: "Turkish",
+                image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=1920",
+                credit: "Photo by Fatih Yürür",
+                creditUrl: "https://unsplash.com/@fatihyurur"
+            },
+            {
+                text: "Xin chào Thế giới",
+                language: "Vietnamese",
+                image: "https://images.unsplash.com/photo-1557750255-c76072a7aad1?w=1920",
+                credit: "Photo by Ammie Ngo",
+                creditUrl: "https://unsplash.com/@ammiengo"
+            },
+            {
+                text: "Hej Verden",
+                language: "Danish",
+                image: "https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=1920",
+                credit: "Photo by Nick Karvounis",
+                creditUrl: "https://unsplash.com/@nickkarvounis"
+            },
+            {
+                text: "Hei Maailma",
+                language: "Finnish",
+                image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920",
+                credit: "Photo by Johny Goerend",
+                creditUrl: "https://unsplash.com/@johnygoerend"
+            },
+            {
+                text: "Witaj Świecie",
+                language: "Polish",
+                image: "https://images.unsplash.com/photo-1519197924294-4ba991a11128?w=1920",
+                credit: "Photo by Kamil Gliwinski",
+                creditUrl: "https://unsplash.com/@kamilgliwinski"
+            },
+            {
+                text: "Ahoj Světe",
+                language: "Czech",
+                image: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1920",
+                credit: "Photo by Anthony Delanoix",
+                creditUrl: "https://unsplash.com/@anthonydelanoix"
+            },
+            {
+                text: "Szia Világ",
+                language: "Hungarian",
+                image: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=1920",
+                credit: "Photo by Keszthelyi Timi",
+                creditUrl: "https://unsplash.com/@keszthelyi_timi"
+            },
+            {
+                text: "Hallo Wereld",
+                language: "Dutch",
+                image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=1920",
+                credit: "Photo by Adrien Olichon",
+                creditUrl: "https://unsplash.com/@adrienolichon"
+            },
+            {
+                text: "Hej Världen",
+                language: "Swedish",
+                image: "https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=1920",
+                credit: "Photo by Jon Flobrant",
+                creditUrl: "https://unsplash.com/@jonflobrant"
+            },
+            {
+                text: "Hallo Verden",
+                language: "Norwegian",
+                image: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920",
+                credit: "Photo by Johny Goerend",
+                creditUrl: "https://unsplash.com/@johnygoerend"
+            },
+            {
+                text: "Habari Dunia",
+                language: "Swahili",
+                image: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1920",
+                credit: "Photo by Sergey Pesterev",
+                creditUrl: "https://unsplash.com/@sickle"
+            },
+            {
+                text: "नमस्ते दुनिया",
+                language: "Hindi",
+                image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1920",
+                credit: "Photo by Sylwia Bartyzel",
+                creditUrl: "https://unsplash.com/@sylwiabartyzel"
+            },
+            {
+                text: "สวัสดีโลก",
+                language: "Thai",
+                image: "https://images.unsplash.com/photo-1528181304800-259b08848526?w=1920",
+                credit: "Photo by Mathew Schwartz",
+                creditUrl: "https://unsplash.com/@cadophoto"
+            },
+            {
+                text: "Aloha Honua",
+                language: "Hawaiian",
+                image: "https://images.unsplash.com/photo-1507876466758-bc54f384809c?w=1920",
+                credit: "Photo by Braden Jarvis",
+                creditUrl: "https://unsplash.com/@jarvisphoto"
+            },
+            {
+                text: "Kia ora te ao",
+                language: "Māori",
+                image: "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=1920",
+                credit: "Photo by Thomas Kinto",
+                creditUrl: "https://unsplash.com/@thomaskinto"
+            },
+            {
+                text: "Hallo Wêreld",
+                language: "Afrikaans",
+                image: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920",
+                credit: "Photo by Slawek K",
+                creditUrl: "https://unsplash.com/@s1awek"
+            },
+            {
+                text: "Saluton Mondo",
+                language: "Esperanto",
+                image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920",
+                credit: "Photo by NASA",
+                creditUrl: "https://unsplash.com/@nasa"
+            }
+        ];
+
+        let currentIndex = 0;
+        const greeting = document.getElementById('greeting');
+        const language = document.getElementById('language');
+        const background = document.getElementById('background');
+        const credit = document.getElementById('credit');
+        const loading = document.getElementById('loading');
+
+        // Preload images
+        const preloadedImages = [];
+
+        function preloadImage(index) {
+            if (preloadedImages[index]) return preloadedImages[index];
+
+            const img = new Image();
+            img.src = translations[index].image;
+            preloadedImages[index] = img;
+            return img;
+        }
+
+        // Create initial image elements
+        translations.forEach((t, i) => {
+            const img = document.createElement('img');
+            img.dataset.index = i;
+            if (i === 0) {
+                img.src = t.image;
+                img.classList.add('active');
+            }
+            background.appendChild(img);
+        });
+
+        // Preload next few images
+        for (let i = 0; i < Math.min(5, translations.length); i++) {
+            preloadImage(i);
+        }
+
+        function updateCredit(index) {
+            credit.textContent = translations[index].credit;
+            credit.href = translations[index].creditUrl;
+        }
+
+        updateCredit(0);
+
+        greeting.addEventListener('click', () => {
+            const prevIndex = currentIndex;
+            currentIndex = (currentIndex + 1) % translations.length;
+
+            // Update text
+            greeting.textContent = translations[currentIndex].text;
+            language.textContent = translations[currentIndex].language;
+
+            // Update background
+            const images = background.querySelectorAll('img');
+            images[prevIndex].classList.remove('active');
+
+            const currentImg = images[currentIndex];
+            if (!currentImg.src) {
+                loading.classList.add('visible');
+                currentImg.src = translations[currentIndex].image;
+                currentImg.onload = () => {
+                    loading.classList.remove('visible');
+                    currentImg.classList.add('active');
+                };
+            } else {
+                currentImg.classList.add('active');
+            }
+
+            // Update credit
+            updateCredit(currentIndex);
+
+            // Preload next images
+            for (let i = 1; i <= 3; i++) {
+                const nextIndex = (currentIndex + i) % translations.length;
+                const nextImg = images[nextIndex];
+                if (!nextImg.src) {
+                    nextImg.src = translations[nextIndex].image;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
