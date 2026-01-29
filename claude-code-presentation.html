@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code — The Story</title>
+
+    <!-- Fonts: Satoshi for body, JetBrains Mono for code elements -->
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=jet-brains-mono@400,500&display=swap">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           Change these to modify the entire presentation look
+           =========================================== */
+        :root {
+            /* Colors - Warm Terminal palette */
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f0f1a;
+            --text-primary: #edf2f4;
+            --text-secondary: #8d99ae;
+            --text-muted: #5c6378;
+            --accent: #e07a5f;
+            --accent-secondary: #81b29a;
+            --accent-tertiary: #f2cc8f;
+            --code-bg: rgba(15, 15, 26, 0.6);
+
+            /* Typography */
+            --font-display: 'Satoshi', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Spacing */
+            --slide-padding: clamp(2rem, 6vw, 5rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --duration-normal: 0.7s;
+            --duration-slow: 1s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(237, 242, 244, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(237, 242, 244, 0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===========================================
+           SLIDE CONTAINER
+           =========================================== */
+        .slide {
+            min-height: 100vh;
+            padding: var(--slide-padding);
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        h1, h2, h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        h1 {
+            font-size: clamp(2.8rem, 7vw, 5.5rem);
+            font-weight: 900;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 1.5rem;
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        p {
+            font-size: clamp(1.1rem, 2vw, 1.35rem);
+            color: var(--text-secondary);
+            max-width: 650px;
+        }
+
+        .highlight {
+            color: var(--accent);
+        }
+
+        .highlight-green {
+            color: var(--accent-secondary);
+        }
+
+        .highlight-yellow {
+            color: var(--accent-tertiary);
+        }
+
+        /* ===========================================
+           COMPONENTS
+           =========================================== */
+
+        /* Terminal badge */
+        .terminal-badge {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            background: rgba(224, 122, 95, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid rgba(224, 122, 95, 0.2);
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .terminal-badge::before {
+            content: '>';
+            margin-right: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* Code block styling */
+        .code-block {
+            font-family: var(--font-mono);
+            font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+            background: var(--code-bg);
+            border: 1px solid rgba(237, 242, 244, 0.08);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block .prompt {
+            color: var(--accent-secondary);
+        }
+
+        .code-block .command {
+            color: var(--text-primary);
+        }
+
+        .code-block .output {
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: rgba(22, 33, 62, 0.5);
+            border: 1px solid rgba(237, 242, 244, 0.06);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.3s var(--ease-out-expo),
+                        border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(224, 122, 95, 0.3);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        /* Comparison layout */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .comparison-side h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-side ul {
+            list-style: none;
+            space-y: 0.75rem;
+        }
+
+        .comparison-side li {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(237, 242, 244, 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .comparison-side li::before {
+            content: '•';
+            color: var(--text-muted);
+        }
+
+        .comparison-side.other li::before {
+            color: var(--text-muted);
+        }
+
+        .comparison-side.claude li::before {
+            color: var(--accent-secondary);
+        }
+
+        /* Three-way comparison */
+        .comparison-three {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .comparison-three {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+        }
+
+        .approach-card {
+            background: rgba(22, 33, 62, 0.4);
+            border: 1px solid rgba(237, 242, 244, 0.06);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .approach-card h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .approach-card .approach-examples {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .approach-card ul {
+            list-style: none;
+        }
+
+        .approach-card li {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0;
+            line-height: 1.4;
+        }
+
+        .approach-card li strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Feature list */
+        .feature-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .feature-list li {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(237, 242, 244, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .feature-list .icon {
+            font-size: 1.3rem;
+        }
+
+        /* Numbered list */
+        .numbered-list {
+            counter-reset: item;
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .numbered-list li {
+            counter-increment: item;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            padding: 1.25rem 0;
+            padding-left: 3.5rem;
+            position: relative;
+            border-bottom: 1px solid rgba(237, 242, 244, 0.05);
+        }
+
+        .numbered-list li::before {
+            content: counter(item);
+            position: absolute;
+            left: 0;
+            top: 1.25rem;
+            width: 2rem;
+            height: 2rem;
+            background: rgba(224, 122, 95, 0.15);
+            color: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .numbered-list li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Cursor blink */
+        .cursor-blink {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: var(--accent);
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal,
+        .slide.visible .reveal-scale {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Staggered children */
+        .slide.visible .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .slide.visible .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .slide.visible .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .slide.visible .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .slide.visible .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .slide.visible .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        .slide.visible .stagger > *:nth-child(1) { transition-delay: 0.15s; }
+        .slide.visible .stagger > *:nth-child(2) { transition-delay: 0.25s; }
+        .slide.visible .stagger > *:nth-child(3) { transition-delay: 0.35s; }
+        .slide.visible .stagger > *:nth-child(4) { transition-delay: 0.45s; }
+        .slide.visible .stagger > *:nth-child(5) { transition-delay: 0.55s; }
+        .slide.visible .stagger > *:nth-child(6) { transition-delay: 0.65s; }
+
+        /* ===========================================
+           NAVIGATION
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(237, 242, 244, 0.2);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .nav-dot:hover {
+            background: rgba(237, 242, 244, 0.4);
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--accent);
+            width: 0%;
+            z-index: 101;
+            transition: width 0.3s ease;
+        }
+
+        /* Keyboard hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .keyboard-hint:hover {
+            opacity: 1;
+        }
+
+        .key {
+            font-family: var(--font-mono);
+            background: rgba(237, 242, 244, 0.08);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* Slide counter */
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ===========================================
+           SLIDE-SPECIFIC STYLES
+           =========================================== */
+
+        /* Title slide gradient orb */
+        .title-slide .gradient-orb {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(224, 122, 95, 0.12) 0%, transparent 60%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
+        }
+
+        /* Use case icons */
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .use-case-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .use-case {
+            background: rgba(22, 33, 62, 0.4);
+            border: 1px solid rgba(237, 242, 244, 0.06);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .use-case-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .use-case h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .use-case p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* Final slide CTA */
+        .cta-block {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(224, 122, 95, 0.1), rgba(129, 178, 154, 0.05));
+            border: 1px solid rgba(224, 122, 95, 0.2);
+            border-radius: 16px;
+        }
+
+        .cta-block .code-line {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .cta-block p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===========================================
+           RESPONSIVE
+           =========================================== */
+        @media (max-width: 768px) {
+            .nav-dots,
+            .keyboard-hint {
+                display: none;
+            }
+
+            .slide-counter {
+                bottom: 1rem;
+                right: 1rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .reveal-scale {
+                transition: opacity 0.3s ease;
+                transform: none;
+            }
+
+            .gradient-orb {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress bar -->
+    <div class="progress-bar"></div>
+
+    <!-- Navigation dots -->
+    <nav class="nav-dots" aria-label="Slide navigation"></nav>
+
+    <!-- Slide counter -->
+    <div class="slide-counter">
+        <span class="current">1</span> / <span class="total">9</span>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="keyboard-hint">
+        <span><span class="key">←</span> <span class="key">→</span> Navigate</span>
+        <span><span class="key">Space</span> Next</span>
+    </div>
+
+    <!-- =========================================
+         SLIDE 1: Title
+         ========================================= -->
+    <section class="slide title-slide">
+        <div class="gradient-orb"></div>
+        <div class="slide-content">
+            <div class="terminal-badge reveal">claude-code</div>
+            <h1 class="reveal">Claude <span class="highlight">Code</span><span class="cursor-blink"></span></h1>
+            <p class="reveal" style="margin-top: 1.5rem; font-size: 1.4rem;">
+                AI that works where you work — right in your terminal
+            </p>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 2: The Story
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">the story</div>
+            <h2 class="reveal">What is <span class="highlight">Claude Code</span>?</h2>
+            <p class="reveal">
+                Claude Code is an <strong>agentic coding assistant</strong> that lives in your terminal.
+                It's Claude — the same AI you chat with — but with the ability to read your files,
+                run commands, and actually <em>do</em> the work.
+            </p>
+            <div class="code-block reveal">
+                <span class="prompt">$</span> <span class="command">claude</span><br>
+                <span class="output">╭─────────────────────────────────────────╮</span><br>
+                <span class="output">│ Welcome to Claude Code                  │</span><br>
+                <span class="output">│ Your AI pair programmer in the terminal │</span><br>
+                <span class="output">╰─────────────────────────────────────────╯</span><br>
+                <span class="output">> What would you like to build today?</span>
+            </div>
+            <p class="reveal" style="margin-top: 1rem; font-size: 1rem; color: var(--text-muted);">
+                No copy-pasting. No context switching. Just describe what you want, and Claude does it.
+            </p>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 3: Three Approaches to AI Coding
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">the landscape</div>
+            <h2 class="reveal">Three Approaches to <span class="highlight-yellow">AI Coding</span></h2>
+            <p class="reveal">
+                Different tools make different trade-offs. Here's how they compare.
+            </p>
+            <div class="comparison-three reveal">
+                <div class="approach-card">
+                    <h4>🌐 Web-Based</h4>
+                    <p class="approach-examples">Replit, v0, Bolt</p>
+                    <ul>
+                        <li><strong>Great for:</strong> Quick prototypes, learning, sharing</li>
+                        <li><strong>Trade-off:</strong> Sandboxed — works in their environment, not yours</li>
+                    </ul>
+                </div>
+                <div class="approach-card">
+                    <h4>🖥️ IDE-Integrated</h4>
+                    <p class="approach-examples">Cursor, Copilot, Windsurf</p>
+                    <ul>
+                        <li><strong>Great for:</strong> In-editor assistance, code completion, chat</li>
+                        <li><strong>Trade-off:</strong> Scoped to one project at a time; varies in agentic capability</li>
+                    </ul>
+                </div>
+                <div class="approach-card">
+                    <h4>⌨️ Terminal-Based</h4>
+                    <p class="approach-examples">Claude Code, Aider</p>
+                    <ul>
+                        <li><strong>Great for:</strong> Multi-repo work, full system access, automation</li>
+                        <li><strong>Trade-off:</strong> Command-line comfort required; less visual</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="reveal" style="margin-top: 1.5rem; font-size: 1rem; color: var(--text-muted);">
+                These aren't competitors — many developers use multiple tools for different tasks.
+            </p>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 4: How Claude Code Works
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">how it works</div>
+            <h2 class="reveal">How <span class="highlight-green">Claude Code</span> Works</h2>
+            <p class="reveal">
+                Claude Code is an <strong>autonomous agent</strong> that operates directly
+                in your terminal with full access to your system.
+            </p>
+            <ul class="feature-list reveal stagger">
+                <li class="reveal"><span class="icon">📁</span> <strong>Reads your entire codebase</strong> — understands context across all files</li>
+                <li class="reveal"><span class="icon">⚡</span> <strong>Runs real commands</strong> — npm, git, tests, builds, anything</li>
+                <li class="reveal"><span class="icon">✏️</span> <strong>Edits files directly</strong> — creates, modifies, refactors with precision</li>
+                <li class="reveal"><span class="icon">🔄</span> <strong>Iterates autonomously</strong> — fixes its own mistakes, runs tests to verify</li>
+                <li class="reveal"><span class="icon">🛡️</span> <strong>You stay in control</strong> — approve or reject any action</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 5: Why the Terminal?
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">why terminal?</div>
+            <h2 class="reveal">Why the <span class="highlight">Terminal</span>?</h2>
+            <p class="reveal">
+                The terminal isn't old-fashioned — it's where <em>real work</em> happens.
+            </p>
+            <div class="card-grid reveal stagger">
+                <div class="card reveal">
+                    <div class="card-icon">🔌</div>
+                    <h4>Universal Access</h4>
+                    <p>Every dev tool, every language, every framework — accessible from one place</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🔗</div>
+                    <h4>No Lock-In</h4>
+                    <p>Works with VS Code, Vim, Emacs, Cursor — whatever you already use</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🏠</div>
+                    <h4>Your Environment</h4>
+                    <p>Your configs, your aliases, your environment variables — all preserved</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🚀</div>
+                    <h4>Full Power</h4>
+                    <p>Git operations, Docker, SSH, databases — anything the command line can do</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 6: Unique Use Cases
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">unique capabilities</div>
+            <h2 class="reveal">What Only <span class="highlight">Claude Code</span> Can Do</h2>
+            <p class="reveal">
+                These aren't just features — they're workflows that aren't possible anywhere else.
+            </p>
+            <div class="use-case-grid reveal stagger">
+                <div class="use-case reveal">
+                    <div class="use-case-icon">🔍</div>
+                    <h4>Codebase Archaeology</h4>
+                    <p>"Explain how authentication works across this entire monorepo"</p>
+                </div>
+                <div class="use-case reveal">
+                    <div class="use-case-icon">🔧</div>
+                    <h4>End-to-End Refactoring</h4>
+                    <p>"Rename this API and update every file, test, and doc that uses it"</p>
+                </div>
+                <div class="use-case reveal">
+                    <div class="use-case-icon">🧪</div>
+                    <h4>Test-Driven Fixes</h4>
+                    <p>"Fix this bug, add a test for it, and don't stop until tests pass"</p>
+                </div>
+                <div class="use-case reveal">
+                    <div class="use-case-icon">📦</div>
+                    <h4>Full Project Scaffolding</h4>
+                    <p>"Set up a new React app with TypeScript, testing, and CI config"</p>
+                </div>
+                <div class="use-case reveal">
+                    <div class="use-case-icon">🔀</div>
+                    <h4>Git Workflow Automation</h4>
+                    <p>"Create a PR with a good description based on my changes"</p>
+                </div>
+                <div class="use-case reveal">
+                    <div class="use-case-icon">🐛</div>
+                    <h4>Debug Loops</h4>
+                    <p>"This error is happening — find the cause and fix it"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 7: For Non-Technical Users
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">getting started</div>
+            <h2 class="reveal">Perfect for <span class="highlight-green">Beginners</span></h2>
+            <p class="reveal">
+                You don't need to be a programmer. Claude Code is actually
+                <em>easier</em> for non-technical users than traditional coding.
+            </p>
+            <div class="card-grid reveal stagger">
+                <div class="card reveal">
+                    <div class="card-icon">💬</div>
+                    <h4>Natural Language</h4>
+                    <p>Just describe what you want in plain English — no syntax to learn</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">👀</div>
+                    <h4>Watch & Learn</h4>
+                    <p>See every command Claude runs — learn by observing real work</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🛟</div>
+                    <h4>Safe Exploration</h4>
+                    <p>Approve actions before they run — undo mistakes with git</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🎓</div>
+                    <h4>Built-in Teacher</h4>
+                    <p>Ask "why did you do that?" and get explanations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 8: Starter Use Cases
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">starter projects</div>
+            <h2 class="reveal">Best <span class="highlight-yellow">First Projects</span></h2>
+            <p class="reveal">
+                Start here — these are approachable projects perfect for learning with Claude Code.
+            </p>
+            <ol class="numbered-list reveal stagger">
+                <li class="reveal">
+                    <strong>"Build me a personal website"</strong><br>
+                    <span style="color: var(--text-muted);">HTML, CSS, maybe some JavaScript. Deployable in minutes.</span>
+                </li>
+                <li class="reveal">
+                    <strong>"Create a script to organize my files"</strong><br>
+                    <span style="color: var(--text-muted);">Sort downloads by date, rename photos — practical automation.</span>
+                </li>
+                <li class="reveal">
+                    <strong>"Help me understand this codebase"</strong><br>
+                    <span style="color: var(--text-muted);">Point Claude at a GitHub repo and ask questions about it.</span>
+                </li>
+                <li class="reveal">
+                    <strong>"Convert this spreadsheet to a simple app"</strong><br>
+                    <span style="color: var(--text-muted);">Turn data into something interactive and shareable.</span>
+                </li>
+                <li class="reveal">
+                    <strong>"Fix this thing that isn't working"</strong><br>
+                    <span style="color: var(--text-muted);">Bring a broken project — Claude loves debugging.</span>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 9: Get Started
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">get started</div>
+            <h2 class="reveal">Start Building <span class="highlight">Today</span></h2>
+            <p class="reveal">
+                One command. That's all it takes.
+            </p>
+            <div class="cta-block reveal">
+                <div class="code-line">
+                    <span style="color: var(--accent-secondary);">$</span> npm install -g @anthropic-ai/claude-code
+                </div>
+                <p>Then just run <code style="background: rgba(237,242,244,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">claude</code> in any project folder.</p>
+            </div>
+            <p class="reveal" style="margin-top: 2rem;">
+                Claude Code isn't about replacing developers.<br>
+                It's about making <span class="highlight-green">everyone</span> capable of building software.
+            </p>
+            <p class="reveal" style="margin-top: 1.5rem; font-size: 1.1rem; color: var(--text-muted);">
+                Your ideas. Your terminal. <span class="highlight">Claude's help.</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- =========================================
+         JAVASCRIPT
+         ========================================= -->
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           Handles navigation, animations, progress
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.totalSlides = this.slides.length;
+                this.isScrolling = false;
+                this.scrollTimeout = null;
+
+                this.init();
+            }
+
+            init() {
+                this.createNavDots();
+                this.updateCounter();
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupScrollSnap();
+                this.updateProgress();
+
+                // Initial visibility
+                this.slides[0].classList.add('visible');
+            }
+
+            /* Create navigation dots */
+            createNavDots() {
+                const nav = document.querySelector('.nav-dots');
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'nav-dot' + (index === 0 ? ' active' : '');
+                    dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    nav.appendChild(dot);
+                });
+                this.navDots = document.querySelectorAll('.nav-dot');
+            }
+
+            /* Update slide counter display */
+            updateCounter() {
+                document.querySelector('.slide-counter .current').textContent = this.currentSlide + 1;
+                document.querySelector('.slide-counter .total').textContent = this.totalSlides;
+            }
+
+            /* Update progress bar width */
+            updateProgress() {
+                const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+                document.querySelector('.progress-bar').style.width = `${progress}%`;
+            }
+
+            /* Update active nav dot */
+            updateNavDots() {
+                this.navDots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            /* Navigate to specific slide */
+            goToSlide(index) {
+                if (index < 0 || index >= this.totalSlides) return;
+                this.currentSlide = index;
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+                this.updateAll();
+            }
+
+            /* Update all UI elements */
+            updateAll() {
+                this.updateCounter();
+                this.updateProgress();
+                this.updateNavDots();
+            }
+
+            /* Intersection Observer for scroll-triggered animations */
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+
+                            // Update current slide index
+                            const index = Array.from(this.slides).indexOf(entry.target);
+                            if (index !== -1) {
+                                this.currentSlide = index;
+                                this.updateAll();
+                            }
+                        }
+                    });
+                }, {
+                    threshold: 0.5
+                });
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            /* Keyboard navigation */
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowRight':
+                        case 'ArrowDown':
+                        case ' ':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide + 1);
+                            break;
+                        case 'ArrowLeft':
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide - 1);
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.totalSlides - 1);
+                            break;
+                    }
+                });
+            }
+
+            /* Scroll snap enhancement */
+            setupScrollSnap() {
+                // Debounced scroll handler for smooth updates
+                window.addEventListener('scroll', () => {
+                    if (this.scrollTimeout) {
+                        clearTimeout(this.scrollTimeout);
+                    }
+                    this.scrollTimeout = setTimeout(() => {
+                        // Observer handles the actual updates
+                    }, 100);
+                }, { passive: true });
+            }
+        }
+
+        // Initialize presentation when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new SlidePresentation();
+        });
+    </script>
+</body>
+</html>
