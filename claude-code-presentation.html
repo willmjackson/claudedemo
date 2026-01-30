@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Code — The Story</title>
 
     <!-- Fonts: Satoshi for body, JetBrains Mono for code elements -->
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=jet-brains-mono@400,500&display=swap">
+    <link rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=jet-brains-mono@400,500&display=swap">
 
     <style>
         /* ===========================================
@@ -100,7 +102,9 @@
         /* ===========================================
            TYPOGRAPHY
            =========================================== */
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             font-weight: 700;
             letter-spacing: -0.02em;
             line-height: 1.1;
@@ -202,7 +206,7 @@
             border-radius: 16px;
             padding: 2rem;
             transition: transform 0.3s var(--ease-out-expo),
-                        border-color 0.3s ease;
+                border-color 0.3s ease;
         }
 
         .card:hover {
@@ -400,7 +404,9 @@
         }
 
         @keyframes blink {
-            50% { opacity: 0; }
+            50% {
+                opacity: 0;
+            }
         }
 
         /* ===========================================
@@ -410,14 +416,14 @@
             opacity: 0;
             transform: translateY(30px);
             transition: opacity var(--duration-normal) var(--ease-out-expo),
-                        transform var(--duration-normal) var(--ease-out-expo);
+                transform var(--duration-normal) var(--ease-out-expo);
         }
 
         .reveal-scale {
             opacity: 0;
             transform: scale(0.95);
             transition: opacity var(--duration-normal) var(--ease-out-expo),
-                        transform var(--duration-normal) var(--ease-out-expo);
+                transform var(--duration-normal) var(--ease-out-expo);
         }
 
         .slide.visible .reveal,
@@ -427,19 +433,53 @@
         }
 
         /* Staggered children */
-        .slide.visible .reveal:nth-child(1) { transition-delay: 0.1s; }
-        .slide.visible .reveal:nth-child(2) { transition-delay: 0.2s; }
-        .slide.visible .reveal:nth-child(3) { transition-delay: 0.3s; }
-        .slide.visible .reveal:nth-child(4) { transition-delay: 0.4s; }
-        .slide.visible .reveal:nth-child(5) { transition-delay: 0.5s; }
-        .slide.visible .reveal:nth-child(6) { transition-delay: 0.6s; }
+        .slide.visible .reveal:nth-child(1) {
+            transition-delay: 0.1s;
+        }
 
-        .slide.visible .stagger > *:nth-child(1) { transition-delay: 0.15s; }
-        .slide.visible .stagger > *:nth-child(2) { transition-delay: 0.25s; }
-        .slide.visible .stagger > *:nth-child(3) { transition-delay: 0.35s; }
-        .slide.visible .stagger > *:nth-child(4) { transition-delay: 0.45s; }
-        .slide.visible .stagger > *:nth-child(5) { transition-delay: 0.55s; }
-        .slide.visible .stagger > *:nth-child(6) { transition-delay: 0.65s; }
+        .slide.visible .reveal:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .slide.visible .reveal:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .slide.visible .reveal:nth-child(4) {
+            transition-delay: 0.4s;
+        }
+
+        .slide.visible .reveal:nth-child(5) {
+            transition-delay: 0.5s;
+        }
+
+        .slide.visible .reveal:nth-child(6) {
+            transition-delay: 0.6s;
+        }
+
+        .slide.visible .stagger>*:nth-child(1) {
+            transition-delay: 0.15s;
+        }
+
+        .slide.visible .stagger>*:nth-child(2) {
+            transition-delay: 0.25s;
+        }
+
+        .slide.visible .stagger>*:nth-child(3) {
+            transition-delay: 0.35s;
+        }
+
+        .slide.visible .stagger>*:nth-child(4) {
+            transition-delay: 0.45s;
+        }
+
+        .slide.visible .stagger>*:nth-child(5) {
+            transition-delay: 0.55s;
+        }
+
+        .slide.visible .stagger>*:nth-child(6) {
+            transition-delay: 0.65s;
+        }
 
         /* ===========================================
            NAVIGATION
@@ -542,8 +582,17 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-            50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+                opacity: 0.8;
+            }
         }
 
         /* Use case icons */
@@ -608,6 +657,7 @@
            RESPONSIVE
            =========================================== */
         @media (max-width: 768px) {
+
             .nav-dots,
             .keyboard-hint {
                 display: none;
@@ -620,7 +670,9 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .reveal, .reveal-scale {
+
+            .reveal,
+            .reveal-scale {
                 transition: opacity 0.3s ease;
                 transform: none;
             }
@@ -631,6 +683,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Progress bar -->
     <div class="progress-bar"></div>
@@ -640,7 +693,7 @@
 
     <!-- Slide counter -->
     <div class="slide-counter">
-        <span class="current">1</span> / <span class="total">9</span>
+        <span class="current">1</span> / <span class="total">11</span>
     </div>
 
     <!-- Keyboard hint -->
@@ -664,7 +717,54 @@
     </section>
 
     <!-- =========================================
-         SLIDE 2: The Story
+         SLIDE 2: About Me
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="terminal-badge reveal">about me</div>
+            <h2 class="reveal">Hi, I'm <span class="highlight">Will Jackson</span></h2>
+            <p class="reveal">Co-founder & CEO at Mote — an EdTech company.</p>
+            <div class="card-grid reveal stagger" style="margin-top: 2rem;">
+                <div class="card reveal">
+                    <div class="card-icon">🎓</div>
+                    <h4>Education Background</h4>
+                    <p>Oxford Uni (PPE) • INSEAD (MBA)</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🚀</div>
+                    <h4>Career Journey</h4>
+                    <p>McKinsey → BBC → Intel → Pandora → Vevo → Mote</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">🌍</div>
+                    <h4>Current Focus</h4>
+                    <p>Creating the leading AI-powered assistive tech company</p>
+                </div>
+                <div class="card reveal">
+                    <div class="card-icon">📍</div>
+                    <h4>Location</h4>
+                    <p>London, UK</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 3: Audience Poll (Slido)
+         ========================================= -->
+    <section class="slide">
+        <div class="slide-content" style="max-width: 1000px; height: 80vh;">
+            <div class="terminal-badge reveal">let's hear from you</div>
+            <h2 class="reveal" style="margin-bottom: 1rem;">Quick <span class="highlight-yellow">Poll</span></h2>
+            <div class="reveal" style="flex: 1; width: 100%; height: calc(100% - 100px); min-height: 500px;">
+                <iframe src="https://app.sli.do/event/1JsdHPdBKg7NZ3WswSi26Z" height="100%" width="100%" frameBorder="0"
+                    style="min-height: 500px; border-radius: 12px;" allow="clipboard-write" title="Slido"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         SLIDE 4: The Story
          ========================================= -->
     <section class="slide">
         <div class="slide-content">
@@ -678,7 +778,7 @@
             <div class="code-block reveal">
                 <span class="prompt">$</span> <span class="command">claude</span><br>
                 <span class="output">╭─────────────────────────────────────────╮</span><br>
-                <span class="output">│ Welcome to Claude Code                  │</span><br>
+                <span class="output">│ Welcome to Claude Code │</span><br>
                 <span class="output">│ Your AI pair programmer in the terminal │</span><br>
                 <span class="output">╰─────────────────────────────────────────╯</span><br>
                 <span class="output">> What would you like to build today?</span>
@@ -713,7 +813,8 @@
                     <p class="approach-examples">Cursor, Copilot, Windsurf</p>
                     <ul>
                         <li><strong>Great for:</strong> In-editor assistance, code completion, chat</li>
-                        <li><strong>Trade-off:</strong> Scoped to one project at a time; varies in agentic capability</li>
+                        <li><strong>Trade-off:</strong> Scoped to one project at a time; varies in agentic capability
+                        </li>
                     </ul>
                 </div>
                 <div class="approach-card">
@@ -743,11 +844,16 @@
                 in your terminal with full access to your system.
             </p>
             <ul class="feature-list reveal stagger">
-                <li class="reveal"><span class="icon">📁</span> <strong>Reads your entire codebase</strong> — understands context across all files</li>
-                <li class="reveal"><span class="icon">⚡</span> <strong>Runs real commands</strong> — npm, git, tests, builds, anything</li>
-                <li class="reveal"><span class="icon">✏️</span> <strong>Edits files directly</strong> — creates, modifies, refactors with precision</li>
-                <li class="reveal"><span class="icon">🔄</span> <strong>Iterates autonomously</strong> — fixes its own mistakes, runs tests to verify</li>
-                <li class="reveal"><span class="icon">🛡️</span> <strong>You stay in control</strong> — approve or reject any action</li>
+                <li class="reveal"><span class="icon">📁</span> <strong>Reads your entire codebase</strong> —
+                    understands context across all files</li>
+                <li class="reveal"><span class="icon">⚡</span> <strong>Runs real commands</strong> — npm, git, tests,
+                    builds, anything</li>
+                <li class="reveal"><span class="icon">✏️</span> <strong>Edits files directly</strong> — creates,
+                    modifies, refactors with precision</li>
+                <li class="reveal"><span class="icon">🔄</span> <strong>Iterates autonomously</strong> — fixes its own
+                    mistakes, runs tests to verify</li>
+                <li class="reveal"><span class="icon">🛡️</span> <strong>You stay in control</strong> — approve or
+                    reject any action</li>
             </ul>
         </div>
     </section>
@@ -881,15 +987,18 @@
             <ol class="numbered-list reveal stagger">
                 <li class="reveal">
                     <strong>"Build me a personal website"</strong><br>
-                    <span style="color: var(--text-muted);">HTML, CSS, maybe some JavaScript. Deployable in minutes.</span>
+                    <span style="color: var(--text-muted);">HTML, CSS, maybe some JavaScript. Deployable in
+                        minutes.</span>
                 </li>
                 <li class="reveal">
                     <strong>"Create a script to organize my files"</strong><br>
-                    <span style="color: var(--text-muted);">Sort downloads by date, rename photos — practical automation.</span>
+                    <span style="color: var(--text-muted);">Sort downloads by date, rename photos — practical
+                        automation.</span>
                 </li>
                 <li class="reveal">
                     <strong>"Help me understand this codebase"</strong><br>
-                    <span style="color: var(--text-muted);">Point Claude at a GitHub repo and ask questions about it.</span>
+                    <span style="color: var(--text-muted);">Point Claude at a GitHub repo and ask questions about
+                        it.</span>
                 </li>
                 <li class="reveal">
                     <strong>"Convert this spreadsheet to a simple app"</strong><br>
@@ -917,7 +1026,9 @@
                 <div class="code-line">
                     <span style="color: var(--accent-secondary);">$</span> npm install -g @anthropic-ai/claude-code
                 </div>
-                <p>Then just run <code style="background: rgba(237,242,244,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">claude</code> in any project folder.</p>
+                <p>Then just run <code
+                        style="background: rgba(237,242,244,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">claude</code>
+                    in any project folder.</p>
             </div>
             <p class="reveal" style="margin-top: 2rem;">
                 Claude Code isn't about replacing developers.<br>
@@ -1032,7 +1143,7 @@
             /* Keyboard navigation */
             setupKeyboardNav() {
                 document.addEventListener('keydown', (e) => {
-                    switch(e.key) {
+                    switch (e.key) {
                         case 'ArrowRight':
                         case 'ArrowDown':
                         case ' ':
@@ -1076,4 +1187,5 @@
         });
     </script>
 </body>
+
 </html>
