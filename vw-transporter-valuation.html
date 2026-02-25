@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VW Transporter T6.1 Valuation Estimator</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232736;
+    --border: #2e3348;
+    --text: #e4e6f0;
+    --text-dim: #8b8fa8;
+    --accent: #4f8ff7;
+    --accent-dim: #2a4a8a;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 0.875rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-header h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0;
+  }
+
+  .card h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+
+  /* Info button & panel */
+  .info-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .info-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .info-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .info-panel {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    font-size: 0.78rem;
+    line-height: 1.65;
+    color: var(--text-dim);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .info-panel.open { display: block; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .info-panel h4 {
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.3rem;
+  }
+
+  .info-panel h4:first-child { margin-top: 0; }
+
+  .info-panel p { margin-bottom: 0.4rem; }
+
+  .info-panel .info-tag {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-right: 0.25rem;
+  }
+
+  .info-tag.best { background: rgba(52,211,153,0.15); color: var(--green); }
+  .info-tag.warn { background: rgba(251,191,36,0.15); color: var(--amber); }
+  .info-tag.note { background: rgba(79,143,247,0.15); color: var(--accent); }
+
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.75rem;
+  }
+
+  .info-table th {
+    text-align: left;
+    color: var(--text);
+    font-weight: 600;
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-table td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid rgba(46,51,72,0.5);
+  }
+
+  .info-table tr:last-child td { border-bottom: none; }
+
+  /* Form controls */
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+  }
+
+  .field input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .field input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .range-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+  }
+
+  .range-header label { margin-bottom: 0; }
+
+  .range-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .range-limits {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+    opacity: 0.7;
+  }
+
+  /* Segmented buttons */
+  .segments {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .segments button {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .segments button:hover {
+    border-color: var(--accent-dim);
+    color: var(--text);
+  }
+
+  .segments button.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Toggle */
+  .toggles {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-item input { display: none; }
+
+  .toggle-track {
+    width: 36px;
+    height: 20px;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    top: 2px;
+    left: 2px;
+    transition: all 0.2s;
+  }
+
+  .toggle-item input:checked + .toggle-track {
+    background: var(--accent-dim);
+  }
+
+  .toggle-item input:checked + .toggle-track::after {
+    background: var(--accent);
+    left: 18px;
+  }
+
+  .toggle-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  /* Result card */
+  .result-card {
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  .price-display {
+    text-align: center;
+    padding: 1.5rem 0 1rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+  }
+
+  .price-main {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .price-sub {
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-top: 0.15rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .price-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: 0.8rem;
+  }
+
+  .price-range .low { color: var(--red); font-weight: 600; }
+  .price-range .high { color: var(--green); font-weight: 600; }
+
+  .range-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--red), var(--amber), var(--green));
+    position: relative;
+  }
+
+  .range-bar .marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+    top: -3px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 6px rgba(79,143,247,0.5);
+  }
+
+  .breakdown {
+    margin-top: 1.25rem;
+  }
+
+  .breakdown h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+
+  .breakdown-row .label { color: var(--text-dim); }
+  .breakdown-row .value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .breakdown-row .value.positive { color: var(--green); }
+  .breakdown-row .value.negative { color: var(--red); }
+  .breakdown-row .value.neutral { color: var(--text-dim); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0.75rem 0;
+  }
+
+  /* Comparables */
+  .comparables {
+    margin-top: 1.25rem;
+  }
+
+  .comparables h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .comp-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface2);
+    border-radius: 6px;
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+
+  .comp-item:hover {
+    border-color: var(--accent-dim);
+    background: rgba(79,143,247,0.06);
+  }
+
+  .comp-item .comp-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comp-item .comp-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .comp-item .comp-meta {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+
+  .comp-item .comp-price {
+    font-weight: 700;
+    margin-left: 0.75rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comp-item .comp-link-icon {
+    margin-left: 0.5rem;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .comp-item:hover .comp-link-icon { opacity: 1; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-left: 0.4rem;
+  }
+
+  .badge.good { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge.fair { background: rgba(251,191,36,0.15); color: var(--amber); }
+  .badge.high { background: rgba(248,113,113,0.15); color: var(--red); }
+
+  footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>VW Transporter <span>T6.1</span> Valuation</h1>
+    <p>Based on 185 AutoTrader listings &middot; LWB Diesel Panel Van &middot; Scraped 25 Feb 2026</p>
+  </header>
+
+  <div class="layout">
+    <!-- Left: Inputs -->
+    <div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <h2>Vehicle Details</h2>
+
+        <div class="field">
+          <div class="range-header">
+            <label>Registration Year</label>
+            <span class="range-value" id="yearVal">2023</span>
+          </div>
+          <input type="range" id="year" min="2020" max="2025" step="1" value="2023">
+          <div class="range-limits"><span>2020</span><span>2025</span></div>
+        </div>
+
+        <div class="field">
+          <div class="range-header">
+            <label>Mileage</label>
+            <span class="range-value" id="mileageVal">20,000</span>
+          </div>
+          <input type="range" id="mileage" min="0" max="50000" step="500" value="20000">
+          <div class="range-limits"><span>0</span><span>50,000</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-header">
+          <h2>Specification</h2>
+          <button class="info-btn" data-target="specInfo" title="What do these mean?">?</button>
+        </div>
+
+        <div class="info-panel" id="specInfo">
+          <h4>Spec Levels</h4>
+          <table class="info-table">
+            <tr>
+              <th>Level</th>
+              <th>Key Features</th>
+            </tr>
+            <tr>
+              <td><strong>Startline</strong></td>
+              <td>Base spec. 6.5" touchscreen, App-Connect, steel wheels, unpainted bumpers. No air con, no cruise, no parking sensors.</td>
+            </tr>
+            <tr>
+              <td><strong>Business</strong></td>
+              <td><span class="info-tag best">Best value</span> Startline + Business Pack: adds air con, rear parking sensors, cruise control. Most common fleet spec.</td>
+            </tr>
+            <tr>
+              <td><strong>Highline</strong></td>
+              <td><span class="info-tag note">Top spec</span> Adaptive cruise, heated windscreen, front &amp; rear sensors, alarm, auto lights/wipers, fog lights, alloy wheels, body-coloured bumpers, folding mirrors.</td>
+            </tr>
+          </table>
+          <p><span class="info-tag warn">Note</span> <strong>Trendline</strong> was only available on the pre-facelift T6 (2015-2019). If listed on a T6.1, it's likely mislabelled. Treated as baseline in the model.</p>
+
+          <h4>Trim (Weight Rating)</h4>
+          <p>The T-number is the gross vehicle weight in hundreds of kg. Higher = more payload capacity.</p>
+          <table class="info-table">
+            <tr><th>Trim</th><th>GVW</th><th>Payload</th><th>Notes</th></tr>
+            <tr><td><strong>T28</strong></td><td>2,800 kg</td><td>809-885 kg</td><td>Lightest. Can be tight for campervan conversions.</td></tr>
+            <tr><td><strong>T30</strong></td><td>3,000 kg</td><td>992-1,114 kg</td><td><span class="info-tag best">Most common</span> Good all-rounder.</td></tr>
+            <tr><td><strong>T32</strong></td><td>3,200 kg</td><td>1,095-1,280 kg</td><td>Heavy loads / campervan builds. Required for most 4Motion configs. Tow up to 2,500 kg.</td></tr>
+          </table>
+        </div>
+
+        <div class="field">
+          <label>Spec Level</label>
+          <div class="segments" id="specBtns">
+            <button data-val="Startline">Startline</button>
+            <button data-val="Trendline">Trendline</button>
+            <button data-val="Highline" class="active">Highline</button>
+            <button data-val="Business">Business</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Trim</label>
+          <div class="segments" id="trimBtns">
+            <button data-val="T28">T28</button>
+            <button data-val="T30" class="active">T30</button>
+            <button data-val="T32">T32</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Power</label>
+          <div class="segments" id="powerBtns">
+            <button data-val="90">90 PS</button>
+            <button data-val="110">110 PS</button>
+            <button data-val="150" class="active">150 PS</button>
+            <button data-val="199">199 PS</button>
+            <button data-val="204">204 PS</button>
+          </div>
+        </div>
+
+        <div class="info-panel" id="powerInfo" style="margin-top:0.75rem; margin-bottom:0">
+          <h4>Engine Options &mdash; all 2.0 TDI (EA288)</h4>
+          <table class="info-table">
+            <tr><th>Power</th><th>Torque</th><th>Turbo</th><th>Gearbox</th><th>Drive</th></tr>
+            <tr><td><strong>90 PS</strong></td><td>220 Nm</td><td>Single</td><td>5-spd man only</td><td>FWD only</td></tr>
+            <tr><td><strong>110 PS</strong></td><td>250 Nm</td><td>Single</td><td>5-spd man only</td><td>FWD only</td></tr>
+            <tr><td><strong>150 PS</strong></td><td>340 Nm</td><td>Single</td><td>6-spd man / 7-spd DSG</td><td>FWD / 4Motion</td></tr>
+            <tr><td><strong>199 PS</strong></td><td>450 Nm</td><td>Biturbo</td><td>7-spd DSG only</td><td>FWD / 4Motion</td></tr>
+            <tr><td><strong>204 PS</strong></td><td>450 Nm</td><td>Biturbo</td><td>7-spd DSG only</td><td>FWD / 4Motion</td></tr>
+          </table>
+          <p><span class="info-tag best">Sweet spot</span> <strong>150 PS</strong> is the most popular for owner-drivers. The jump from 250 Nm to 340 Nm torque is huge. Single turbo = simpler, more reliable than biturbo. Gets the 6-speed manual (5-speed on 90/110 is the weak link).</p>
+          <p><span class="info-tag note">199 vs 204</span> The 199 PS (2020) was detuned from 204 to meet Euro 6d. Re-rated to 204 PS from ~2021. Identical in practice. Both DSG-only.</p>
+          <p><span class="info-tag warn">Biturbo</span> The pre-facelift T6 204 PS (CXEB) had turbo/oil issues. The T6.1 biturbo (CXEC) is improved but inherently more complex. Budget for higher long-term maintenance.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Options</h2>
+          <button class="info-btn" data-target="optionsInfo" title="What do these mean?">?</button>
+        </div>
+
+        <div class="info-panel" id="optionsInfo">
+          <h4>Automatic (DSG)</h4>
+          <p>The DQ500 7-speed wet-clutch DSG. Robust when maintained &mdash; <strong>oil + filter change every 37k miles is critical</strong>. Neglecting this causes expensive mechatronic failure. Budget ~&pound;300 for the service at an independent. Commands a significant used premium (~&pound;6.7k in this dataset), especially for campervans.</p>
+          <p><span class="info-tag warn">Note</span> 90 PS and 110 PS are manual-only. DSG is optional on 150 PS and standard on 199/204 PS.</p>
+
+          <h4>High Roof</h4>
+          <p>Adds ~490 mm internal height (1,940 mm vs 1,410 mm) and 2.6 m&sup3; extra load volume. LWB only. Great for standing height in campervan conversions. Trade-off: higher centre of gravity, worse fuel economy, restricted in some car parks and ferries.</p>
+
+          <h4>4Motion AWD</h4>
+          <p>Haldex-type on-demand system &mdash; front-biased, engages rear axle when slip is detected. Adds ~100-120 kg kerb weight (reduces payload). Excellent for mud, snow, wet grass. Only available with 150 PS+ engines. Pushes you towards T30/T32 for payload headroom. Highly sought after for campervans.</p>
+        </div>
+
+        <div class="toggles">
+          <label class="toggle-item">
+            <input type="checkbox" id="automatic">
+            <div class="toggle-track"></div>
+            <span class="toggle-label">Automatic (DSG)</span>
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="highRoof">
+            <div class="toggle-track"></div>
+            <span class="toggle-label">High Roof</span>
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="fourMotion">
+            <div class="toggle-track"></div>
+            <span class="toggle-label">4Motion AWD</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="result-card">
+      <div class="card">
+        <h2>Estimated Market Value</h2>
+
+        <div class="price-display">
+          <div class="price-label">Inc. VAT</div>
+          <div class="price-main" id="priceInc">&pound;33,900</div>
+          <div class="price-sub" id="priceEx">&pound;28,250 ex-VAT</div>
+        </div>
+
+        <div class="price-range">
+          <span class="low" id="rangeLow">&pound;24k</span>
+          <div class="range-bar"><div class="marker" id="rangeMarker" style="left:50%"></div></div>
+          <span class="high" id="rangeHigh">&pound;44k</span>
+        </div>
+
+        <div class="breakdown">
+          <h3>Price Breakdown</h3>
+          <div id="breakdownRows"></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="comparables">
+          <h3>Closest Market Comparables</h3>
+          <div id="compList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Model: Multiple Linear Regression &middot; R&sup2; = 0.59 &middot; MAE = &pound;3,580 &middot; MAPE = 9.9%<br>
+    Prices are estimates based on current AutoTrader listings. Actual values may vary.
+  </footer>
+</div>
+
+<script>
+// Model coefficients
+const COEF = {
+  intercept: 35151.59,
+  mileage_k: -194.42,
+  age_years: -850.61,
+  power_150plus: 1415.21,
+  power_199plus: 1731.17,
+  spec_Highline: 5507.93,
+  spec_Trendline: 0,
+  spec_Business: -1438.59,
+  trim_T30: 1059.65,
+  trim_T32: 1565.71,
+  high_roof: 3859.53,
+  automatic: 6702.64,
+  fourMotion: 837.10,
+};
+const RMSE = 4960.17;
+
+// Cleaned listings data (embedded)
+const LISTINGS = [{"id": "202602059697933", "year": 2024, "mileage": 39203, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202602119847075", "year": 2022, "mileage": 22143, "price": 24994, "price_inc_vat": 29992.8, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Horsham"}, {"id": "202511278167312", "year": 2024, "mileage": 31145, "price": 27290, "price_inc_vat": 32748.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Loughton"}, {"id": "202601219311348", "year": 2022, "mileage": 29587, "price": 29995, "price_inc_vat": 35994.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Chelmsford"}, {"id": "202602109829402", "year": 2022, "mileage": 47998, "price": 28890, "price_inc_vat": 34668.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Poole"}, {"id": "202512018252280", "year": 2025, "mileage": 102, "price": 31461, "price_inc_vat": 37753.2, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Dartford"}, {"id": "202510097009760", "year": 2024, "mileage": 8971, "price": 31995, "price_inc_vat": 38394.0, "plusVAT": true, "power": 150, "trim": "T28", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Loughton"}, {"id": "202602240168297", "year": 2023, "mileage": 23254, "price": 26995, "price_inc_vat": 32394.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Havant"}, {"id": "202601239368229", "year": 2022, "mileage": 39000, "price": 28990, "price_inc_vat": 34788.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sevenoaks"}, {"id": "202602240169434", "year": 2021, "mileage": 36864, "price": 21994, "price_inc_vat": 26392.8, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202601279457732", "year": 2024, "mileage": 20503, "price": 27750, "price_inc_vat": 33300.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Chelmsford"}, {"id": "202509296722314", "year": 2025, "mileage": 9960, "price": 28998, "price_inc_vat": 34797.6, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202602039627224", "year": 2022, "mileage": 3000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": 110, "trim": null, "specLevel": "Business", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Knottingley"}, {"id": "202511117811616", "year": 2024, "mileage": 21346, "price": 25994, "price_inc_vat": 31192.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202602179986088", "year": 2024, "mileage": 22269, "price": 37994, "price_inc_vat": 45592.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Horsham"}, {"id": "202511067711303", "year": 2020, "mileage": 40000, "price": 23990, "price_inc_vat": 28788.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Abingdon"}, {"id": "202511137873016", "year": 2022, "mileage": 47699, "price": 25995, "price_inc_vat": 25995, "plusVAT": false, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bristol"}, {"id": "202512058408752", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202512158588274", "year": 2021, "mileage": 23640, "price": 17945, "price_inc_vat": 21534.0, "plusVAT": true, "power": null, "trim": "T28", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bristol"}, {"id": "202602129864283", "year": 2021, "mileage": 38350, "price": 23990, "price_inc_vat": 28788.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Feltham"}, {"id": "202601209274355", "year": 2024, "mileage": 20705, "price": 30994, "price_inc_vat": 37192.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202511127833451", "year": 2024, "mileage": 5137, "price": 26994, "price_inc_vat": 32392.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Horsham"}, {"id": "202602109816957", "year": 2022, "mileage": 22143, "price": 24994, "price_inc_vat": 29992.8, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202601199251865", "year": 2023, "mileage": 43222, "price": 25994, "price_inc_vat": 25994, "plusVAT": false, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202511107797747", "year": 2023, "mileage": 22100, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Startline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202602230148014", "year": 2023, "mileage": 37680, "price": 22495, "price_inc_vat": 26994.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Startline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Hinckley"}, {"id": "202602169968898", "year": 2020, "mileage": 44491, "price": 29975, "price_inc_vat": 29975, "plusVAT": false, "power": 110, "trim": "T30", "specLevel": "Highline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Loughborough"}, {"id": "202511127842727", "year": 2024, "mileage": 12200, "price": 27194, "price_inc_vat": 32632.8, "plusVAT": true, "power": null, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Crawley"}, {"id": "202511127841642", "year": 2020, "mileage": 39863, "price": 24893, "price_inc_vat": 29871.6, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Wooburn Green"}, {"id": "202602099780020", "year": 2023, "mileage": 32000, "price": 29990, "price_inc_vat": 35988.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sevenoaks"}, {"id": "202601249391552", "year": 2024, "mileage": 24259, "price": 23390, "price_inc_vat": 28068.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": null}, {"id": "202602250198472", "year": 2024, "mileage": 22269, "price": 37994, "price_inc_vat": 45592.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202601149139957", "year": 2025, "mileage": 3, "price": 33991, "price_inc_vat": 40789.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202601139118251", "year": 2025, "mileage": 15246, "price": 28794, "price_inc_vat": 34552.799999999996, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202601159157883", "year": 2021, "mileage": 42634, "price": 26995, "price_inc_vat": 26995, "plusVAT": false, "power": 150, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Windsor"}, {"id": "202602099793894", "year": 2025, "mileage": 10, "price": 36299, "price_inc_vat": 43558.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202511107786479", "year": 2024, "mileage": 5137, "price": 26994, "price_inc_vat": 32392.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Croydon"}, {"id": "202601239380494", "year": 2025, "mileage": 8467, "price": 37690, "price_inc_vat": 45228.0, "plusVAT": true, "power": 204, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": null}, {"id": "202509076130124", "year": 2024, "mileage": 7, "price": 52990, "price_inc_vat": 63588.0, "plusVAT": true, "power": 199, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Abingdon"}, {"id": "202601259412988", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202602200093704", "year": 2021, "mileage": 35266, "price": 28945, "price_inc_vat": 34734.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Bristol"}, {"id": "202512028305766", "year": 2020, "mileage": 39000, "price": 24995, "price_inc_vat": 29994.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "4Motion", "location": "Pontypridd"}, {"id": "202601149139959", "year": 2025, "mileage": 3, "price": 32991, "price_inc_vat": 39589.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202601139118649", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202509156337678", "year": 2021, "mileage": 32682, "price": 25837, "price_inc_vat": 31004.399999999998, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202512018250455", "year": 2025, "mileage": 101, "price": 35490, "price_inc_vat": 42588.0, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Peterborough"}, {"id": "202510187247896", "year": 2023, "mileage": 35660, "price": 45900, "price_inc_vat": 55080.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Cheltenham"}, {"id": "202511097768160", "year": 2020, "mileage": 22000, "price": 38950, "price_inc_vat": 38950, "plusVAT": false, "power": 150, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202509106214073", "year": 2025, "mileage": 9999, "price": 38094, "price_inc_vat": 45712.799999999996, "plusVAT": true, "power": 170, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Northampton"}, {"id": "202601089012777", "year": 2021, "mileage": 36234, "price": 21450, "price_inc_vat": 25740.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Melton Mowbray"}, {"id": "202512238766032", "year": 2024, "mileage": 7549, "price": 24690, "price_inc_vat": 29628.0, "plusVAT": true, "power": 110, "trim": "T28", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Lincoln"}, {"id": "202512048341911", "year": 2025, "mileage": 25, "price": 29995, "price_inc_vat": 35994.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202601169202658", "year": 2021, "mileage": 34127, "price": 28990, "price_inc_vat": 34788.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Milton Keynes"}, {"id": "202601299515183", "year": 2022, "mileage": 9963, "price": 47499, "price_inc_vat": 47499, "plusVAT": false, "power": 204, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202511288202744", "year": 2024, "mileage": 11153, "price": 25990, "price_inc_vat": 31188.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Feltham"}, {"id": "202601289495828", "year": 2020, "mileage": 45197, "price": 14994, "price_inc_vat": 17992.8, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202511218061539", "year": 2024, "mileage": 7000, "price": 39990, "price_inc_vat": 47988.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Abingdon"}, {"id": "202510317559915", "year": 2021, "mileage": 44121, "price": 44000, "price_inc_vat": 44000, "plusVAT": false, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Harlow"}, {"id": "202602250198747", "year": 2024, "mileage": 22269, "price": 37994, "price_inc_vat": 45592.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Tonbridge"}, {"id": "202602169970583", "year": 2024, "mileage": 18000, "price": 31980, "price_inc_vat": 38376.0, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202510016790149", "year": 2025, "mileage": 2405, "price": 31095, "price_inc_vat": 37314.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Peterborough"}, {"id": "202512178666128", "year": 2021, "mileage": 46876, "price": 26990, "price_inc_vat": 32388.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "4Motion", "location": "Exeter"}, {"id": "202602220121060", "year": 2022, "mileage": 22000, "price": 28500, "price_inc_vat": 28500, "plusVAT": false, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Barnet"}, {"id": "202601249386752", "year": 2023, "mileage": 24323, "price": 27490, "price_inc_vat": 32988.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bilston"}, {"id": "202601249393013", "year": 2020, "mileage": 43000, "price": 34000, "price_inc_vat": 34000, "plusVAT": false, "power": 199, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Pulborough"}, {"id": "202601219311443", "year": 2024, "mileage": 12703, "price": 29994, "price_inc_vat": 29994, "plusVAT": false, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202602069734352", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202601149139956", "year": 2025, "mileage": 3, "price": 32991, "price_inc_vat": 39589.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202602099785712", "year": 2021, "mileage": 50000, "price": 44975, "price_inc_vat": 44975, "plusVAT": false, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Loughborough"}, {"id": "202602119846554", "year": 2022, "mileage": 22143, "price": 24994, "price_inc_vat": 29992.8, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Tonbridge"}, {"id": "202601309537461", "year": 2025, "mileage": 79, "price": 33999, "price_inc_vat": 40798.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Kettering"}, {"id": "202602200092019", "year": 2021, "mileage": 38192, "price": 18990, "price_inc_vat": 22788.0, "plusVAT": true, "power": 90, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Tredegar"}, {"id": "202404309233253", "year": 2024, "mileage": 10, "price": 44990, "price_inc_vat": 53988.0, "plusVAT": true, "power": null, "trim": "T28", "specLevel": "Highline", "highRoof": true, "transmission": "Automatic", "drivetrain": "FWD", "location": "Abingdon"}, {"id": "202510277450937", "year": 2023, "mileage": 25846, "price": 24990, "price_inc_vat": 29988.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Exeter"}, {"id": "202508205591493", "year": 2022, "mileage": 46000, "price": 45000, "price_inc_vat": 54000.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Bury St Edmunds"}, {"id": "202511127834297", "year": 2024, "mileage": 21346, "price": 25994, "price_inc_vat": 31192.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Horsham"}, {"id": "202510217305232", "year": 2023, "mileage": 21040, "price": 19990, "price_inc_vat": 23988.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Huddersfield"}, {"id": "202511047651790", "year": 2022, "mileage": 47848, "price": 17990, "price_inc_vat": 21588.0, "plusVAT": true, "power": 110, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Preston"}, {"id": "202601269439800", "year": 2025, "mileage": 13603, "price": 31080, "price_inc_vat": 37296.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601309548191", "year": 2024, "mileage": 15000, "price": 33995, "price_inc_vat": 40794.0, "plusVAT": true, "power": 199, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202511067700388", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202503210412276", "year": 2023, "mileage": 37000, "price": 42995, "price_inc_vat": 51594.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202510086976864", "year": 2025, "mileage": 101, "price": 27795, "price_inc_vat": 33354.0, "plusVAT": true, "power": 110, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202602200091298", "year": 2024, "mileage": 16867, "price": 42499, "price_inc_vat": 42499, "plusVAT": false, "power": 199, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202601219317503", "year": 2024, "mileage": 20705, "price": 30994, "price_inc_vat": 37192.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Horsham"}, {"id": "202510086976872", "year": 2025, "mileage": 101, "price": 32795, "price_inc_vat": 39354.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202601279450767", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Knottingley"}, {"id": "202602230145656", "year": 2025, "mileage": 6775, "price": 29235, "price_inc_vat": 35082.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Cleckheaton"}, {"id": "202601078968459", "year": 2025, "mileage": 12, "price": 25891, "price_inc_vat": 31069.199999999997, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Oldham"}, {"id": "202510086976867", "year": 2025, "mileage": 101, "price": 27795, "price_inc_vat": 33354.0, "plusVAT": true, "power": 110, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202601299510558", "year": 2023, "mileage": 19240, "price": 30980, "price_inc_vat": 37176.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202602139897028", "year": 2024, "mileage": 30205, "price": 32990, "price_inc_vat": 39588.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Wigan"}, {"id": "202506243825891", "year": 2024, "mileage": 12048, "price": 25694, "price_inc_vat": 30832.8, "plusVAT": true, "power": null, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Sittingbourne"}, {"id": "202602059692221", "year": 2025, "mileage": 10, "price": 33999, "price_inc_vat": 40798.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202512238762423", "year": 2025, "mileage": 3, "price": 34991, "price_inc_vat": 41989.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202602220123375", "year": 2022, "mileage": 40337, "price": 24485, "price_inc_vat": 29382.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bury"}, {"id": "202601229329081", "year": 2024, "mileage": 27575, "price": 28991, "price_inc_vat": 34789.2, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Preston"}, {"id": "202601219309812", "year": 2024, "mileage": 13792, "price": 35490, "price_inc_vat": 42588.0, "plusVAT": true, "power": null, "trim": "T28", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Southampton"}, {"id": "202602069719230", "year": 2025, "mileage": 10, "price": 33499, "price_inc_vat": 40198.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202602069718286", "year": 2024, "mileage": 12737, "price": 27498, "price_inc_vat": 32997.6, "plusVAT": true, "power": null, "trim": null, "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Westham"}, {"id": "202601099024653", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Knottingley"}, {"id": "202510086976874", "year": 2025, "mileage": 233, "price": 27000, "price_inc_vat": 32400.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202509126274248", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Knottingley"}, {"id": "202409164106594", "year": 2023, "mileage": 15, "price": 42995, "price_inc_vat": 51594.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202601299516308", "year": 2024, "mileage": 14150, "price": 35250, "price_inc_vat": 42300.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Wigan"}, {"id": "202601099022820", "year": 2021, "mileage": 43000, "price": 19995, "price_inc_vat": 23994.0, "plusVAT": true, "power": 90, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Deeside"}, {"id": "202601159153558", "year": 2025, "mileage": 3, "price": 33991, "price_inc_vat": 40789.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202601159153559", "year": 2025, "mileage": 3, "price": 33991, "price_inc_vat": 40789.2, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Birmingham"}, {"id": "202602129875366", "year": 2023, "mileage": 35984, "price": 26994, "price_inc_vat": 32392.8, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202601299508108", "year": 2023, "mileage": 25310, "price": 28495, "price_inc_vat": 34194.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Garngoch"}, {"id": "202602180025693", "year": 2023, "mileage": 26815, "price": 30995, "price_inc_vat": 37194.0, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202512108510249", "year": 2025, "mileage": 10, "price": 36299, "price_inc_vat": 43558.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202602069739066", "year": 2025, "mileage": 10, "price": 33999, "price_inc_vat": 40798.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Leicester"}, {"id": "202601078968460", "year": 2025, "mileage": 12, "price": 31791, "price_inc_vat": 38149.2, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Oldham"}, {"id": "202510317551227", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202509126282498", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202512158597259", "year": 2025, "mileage": 101, "price": 25500, "price_inc_vat": 30600.0, "plusVAT": true, "power": 110, "trim": "T28", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202409274573477", "year": 2023, "mileage": 19000, "price": 42995, "price_inc_vat": 51594.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": true, "transmission": "Automatic", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202602139906052", "year": 2022, "mileage": 45290, "price": 27990, "price_inc_vat": 33588.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Feltham"}, {"id": "202509096185318", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202511127833335", "year": 2024, "mileage": 5137, "price": 26994, "price_inc_vat": 32392.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Tonbridge"}, {"id": "202409134002326", "year": 2023, "mileage": 18000, "price": 24990, "price_inc_vat": 29988.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Feltham"}, {"id": "202601309553093", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202602149930185", "year": 2020, "mileage": 18631, "price": 32000, "price_inc_vat": 38400.0, "plusVAT": true, "power": null, "trim": "T28", "specLevel": "Highline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202602129885558", "year": 2024, "mileage": 24817, "price": 24494, "price_inc_vat": 29392.8, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202602250194538", "year": 2023, "mileage": 25000, "price": 30980, "price_inc_vat": 37176.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202510076958150", "year": 2025, "mileage": 101, "price": 32795, "price_inc_vat": 39354.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202512198713931", "year": 2022, "mileage": 37752, "price": 20590, "price_inc_vat": 24708.0, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Cardiff"}, {"id": "202510036868759", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202511288210414", "year": 2025, "mileage": 40, "price": 29995, "price_inc_vat": 35994.0, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": null}, {"id": "202511258116815", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202602240174177", "year": 2023, "mileage": 27000, "price": 42995, "price_inc_vat": 51594.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202602069731691", "year": 2021, "mileage": 30200, "price": 34000, "price_inc_vat": 40800.0, "plusVAT": true, "power": 150, "trim": "T28", "specLevel": "Highline", "highRoof": true, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202509056069410", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202510317548902", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202512148582542", "year": 2022, "mileage": 35000, "price": 42490, "price_inc_vat": 42490, "plusVAT": false, "power": null, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Kiveton Park"}, {"id": "202507144451909", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202512238778901", "year": 2025, "mileage": 2984, "price": 49991, "price_inc_vat": 59989.2, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Abingdon"}, {"id": "202601219317303", "year": 2024, "mileage": 20705, "price": 30994, "price_inc_vat": 37192.799999999996, "plusVAT": true, "power": null, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Tonbridge"}, {"id": "202602129874591", "year": 2024, "mileage": 14095, "price": 49990, "price_inc_vat": 49990, "plusVAT": false, "power": 150, "trim": "T28", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Calne"}, {"id": "202602099777930", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202601129082693", "year": 2024, "mileage": 8000, "price": 31990, "price_inc_vat": 38388.0, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bicester"}, {"id": "202510167184336", "year": 2025, "mileage": 1701, "price": 26107, "price_inc_vat": 31328.399999999998, "plusVAT": true, "power": 110, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Hessle"}, {"id": "202511107793034", "year": 2024, "mileage": 50000, "price": 22990, "price_inc_vat": 27588.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Stoke On Trent"}, {"id": "202504301888098", "year": 2022, "mileage": 42573, "price": 29998, "price_inc_vat": 35997.6, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Padworth"}, {"id": "202510076958145", "year": 2025, "mileage": 101, "price": 32795, "price_inc_vat": 39354.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Manchester"}, {"id": "202511107786861", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202509116230861", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202510177233458", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202511127834412", "year": 2024, "mileage": 21346, "price": 25994, "price_inc_vat": 31192.8, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Tonbridge"}, {"id": "202601139108352", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202602230136294", "year": 2023, "mileage": 46350, "price": 29980, "price_inc_vat": 35976.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202512048355928", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202507184596150", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601219316281", "year": 2025, "mileage": 10, "price": 43791, "price_inc_vat": 52549.2, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Preston"}, {"id": "202601099024648", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202508055146250", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202602210102014", "year": 2022, "mileage": 35315, "price": 22498, "price_inc_vat": 26997.6, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Glasgow"}, {"id": "202511288206812", "year": 2023, "mileage": 33000, "price": 25450, "price_inc_vat": 30540.0, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Shipley"}, {"id": "202509126279960", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601129073909", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601089010862", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202509106206339", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601099023399", "year": 2021, "mileage": 46227, "price": 34690, "price_inc_vat": 41628.0, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Scunthorpe"}, {"id": "202510307522994", "year": 2023, "mileage": 50000, "price": 27300, "price_inc_vat": 32760.0, "plusVAT": true, "power": 150, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Sheffield"}, {"id": "202601129083346", "year": 2024, "mileage": 35554, "price": 29094, "price_inc_vat": 34912.799999999996, "plusVAT": true, "power": null, "trim": null, "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Newbridge"}, {"id": "202511067700396", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202512168634000", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202512168615063", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202602240176424", "year": 2023, "mileage": 22601, "price": 22498, "price_inc_vat": 26997.6, "plusVAT": true, "power": 110, "trim": "T30", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Edinburgh"}, {"id": "202512188679499", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202602109807829", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202512168615381", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202602230133927", "year": 2023, "mileage": 28432, "price": 22998, "price_inc_vat": 27597.6, "plusVAT": true, "power": 90, "trim": "T28", "specLevel": "Startline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Preston"}, {"id": "202509256614898", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202511278185922", "year": 2024, "mileage": 21000, "price": 64995, "price_inc_vat": 64995, "plusVAT": false, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "FWD", "location": "Newton Aycliffe"}, {"id": "202511067700412", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202509096179343", "year": 2025, "mileage": 1249, "price": 28589, "price_inc_vat": 34306.799999999996, "plusVAT": true, "power": null, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Newbridge"}, {"id": "202601109049351", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202601099024654", "year": 2022, "mileage": 50000, "price": 27989, "price_inc_vat": 33586.799999999996, "plusVAT": true, "power": null, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Automatic", "drivetrain": "4Motion", "location": "Knottingley"}, {"id": "202602079755188", "year": 2020, "mileage": 45540, "price": 25000, "price_inc_vat": 30000.0, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "York"}, {"id": "202511137867980", "year": 2024, "mileage": 25000, "price": 28950, "price_inc_vat": 34740.0, "plusVAT": true, "power": 150, "trim": "T32", "specLevel": "Startline", "highRoof": true, "transmission": "Manual", "drivetrain": "FWD", "location": "Preston"}, {"id": "202511097768187", "year": 2023, "mileage": 33000, "price": 20000, "price_inc_vat": 24000.0, "plusVAT": true, "power": null, "trim": "T28", "specLevel": "Startline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Ipswich"}, {"id": "202602069725582", "year": 2024, "mileage": 13000, "price": 29979, "price_inc_vat": 35974.799999999996, "plusVAT": true, "power": 150, "trim": "T30", "specLevel": "Highline", "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Helensburgh"}, {"id": "202601219310816", "year": 2020, "mileage": 20642, "price": 17146, "price_inc_vat": 20575.2, "plusVAT": true, "power": 130, "trim": null, "specLevel": null, "highRoof": false, "transmission": "Manual", "drivetrain": "FWD", "location": "Bristol"}];
+
+// State
+const state = {
+  year: 2023,
+  mileage: 20000,
+  spec: 'Highline',
+  trim: 'T30',
+  power: 150,
+  automatic: false,
+  highRoof: false,
+  fourMotion: false,
+};
+
+function estimate(s) {
+  let val = COEF.intercept;
+  val += (s.mileage / 1000) * COEF.mileage_k;
+  val += (2026 - s.year) * COEF.age_years;
+  if (s.power >= 150) val += COEF.power_150plus;
+  if (s.power >= 199) val += COEF.power_199plus;
+  if (s.spec === 'Highline') val += COEF.spec_Highline;
+  else if (s.spec === 'Trendline') val += COEF.spec_Trendline;
+  else if (s.spec === 'Business') val += COEF.spec_Business;
+  if (s.trim === 'T30') val += COEF.trim_T30;
+  else if (s.trim === 'T32') val += COEF.trim_T32;
+  if (s.highRoof) val += COEF.high_roof;
+  if (s.automatic) val += COEF.automatic;
+  if (s.fourMotion) val += COEF.fourMotion;
+  return val;
+}
+
+function fmt(n) {
+  return '\u00a3' + Math.round(n).toLocaleString('en-GB');
+}
+
+function fmtK(n) {
+  return n >= 1000 ? '\u00a3' + Math.round(n/1000) + 'k' : fmt(n);
+}
+
+function findComparables(s) {
+  return LISTINGS
+    .map(l => {
+      let dist = 0;
+      dist += Math.abs(l.year - s.year) * 3;
+      dist += Math.abs(l.mileage - s.mileage) / 5000;
+      if ((l.specLevel || '') !== s.spec) dist += 2;
+      if ((l.trim || '') !== s.trim) dist += 1;
+      if ((l.transmission === 'Automatic') !== s.automatic) dist += 2;
+      if (l.highRoof !== s.highRoof) dist += 1;
+      if ((l.drivetrain === '4Motion') !== s.fourMotion) dist += 1;
+      const lPower = l.power || 110;
+      dist += Math.abs(lPower - s.power) / 50;
+      return { ...l, dist };
+    })
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 5);
+}
+
+function update() {
+  const val = estimate(state);
+  const lo = val - 1.96 * RMSE;
+  const hi = val + 1.96 * RMSE;
+  const exVat = val / 1.2;
+
+  document.getElementById('priceInc').textContent = fmt(val);
+  document.getElementById('priceEx').textContent = fmt(exVat) + ' ex-VAT';
+  document.getElementById('rangeLow').textContent = fmtK(lo);
+  document.getElementById('rangeHigh').textContent = fmtK(hi);
+
+  const pct = ((val - lo) / (hi - lo)) * 100;
+  document.getElementById('rangeMarker').style.left = pct + '%';
+
+  // Breakdown
+  const rows = [];
+  rows.push({ label: 'Base value (new)', value: COEF.intercept, show: true });
+  const agePenalty = (2026 - state.year) * COEF.age_years;
+  if (state.year < 2026) rows.push({ label: `Age (${2026 - state.year} yrs)`, value: agePenalty });
+  const milePenalty = (state.mileage / 1000) * COEF.mileage_k;
+  if (state.mileage > 0) rows.push({ label: `Mileage (${(state.mileage/1000).toFixed(0)}k)`, value: milePenalty });
+
+  if (state.spec === 'Highline') rows.push({ label: 'Highline spec', value: COEF.spec_Highline });
+  else if (state.spec === 'Business') rows.push({ label: 'Business spec', value: COEF.spec_Business });
+
+  if (state.trim === 'T30') rows.push({ label: 'T30 trim', value: COEF.trim_T30 });
+  else if (state.trim === 'T32') rows.push({ label: 'T32 trim', value: COEF.trim_T32 });
+
+  if (state.power >= 150) rows.push({ label: '150+ PS engine', value: COEF.power_150plus });
+  if (state.power >= 199) rows.push({ label: '199+ PS engine', value: COEF.power_199plus });
+  if (state.automatic) rows.push({ label: 'Automatic (DSG)', value: COEF.automatic });
+  if (state.highRoof) rows.push({ label: 'High roof', value: COEF.high_roof });
+  if (state.fourMotion) rows.push({ label: '4Motion AWD', value: COEF.fourMotion });
+
+  const container = document.getElementById('breakdownRows');
+  container.innerHTML = rows.map(r => {
+    const cls = r.value > 100 ? 'positive' : r.value < -100 ? 'negative' : 'neutral';
+    const prefix = r.value > 0 ? '+' : '';
+    return `<div class="breakdown-row">
+      <span class="label">${r.label}</span>
+      <span class="value ${cls}">${prefix}${fmt(r.value)}</span>
+    </div>`;
+  }).join('') + `<hr class="divider"><div class="breakdown-row">
+    <span class="label" style="font-weight:600;color:var(--text)">Total (inc VAT)</span>
+    <span class="value" style="color:var(--accent)">${fmt(val)}</span>
+  </div>`;
+
+  // Comparables with deep links
+  const comps = findComparables(state);
+  const compContainer = document.getElementById('compList');
+  compContainer.innerHTML = comps.map(c => {
+    const diff = c.price_inc_vat - val;
+    const pctDiff = (diff / val) * 100;
+    let badgeCls, badgeText;
+    if (pctDiff < -5) { badgeCls = 'good'; badgeText = 'Below est.'; }
+    else if (pctDiff > 5) { badgeCls = 'high'; badgeText = 'Above est.'; }
+    else { badgeCls = 'fair'; badgeText = 'Near est.'; }
+
+    const specStr = c.specLevel || '';
+    const trimStr = c.trim || '';
+    const transStr = c.transmission === 'Automatic' ? 'Auto' : 'Man';
+    const powerStr = c.power ? c.power + 'ps' : '';
+    const url = `https://www.autotrader.co.uk/van-details/${c.id}`;
+
+    return `<a class="comp-item" href="${url}" target="_blank" rel="noopener">
+      <div class="comp-details">
+        <div class="comp-title">${c.year} ${trimStr} ${specStr} ${powerStr} ${transStr}</div>
+        <div class="comp-meta">${c.mileage.toLocaleString()} mi \u00b7 ${c.location || 'Unknown'}</div>
+      </div>
+      <span class="comp-price">${fmt(c.price_inc_vat)}<span class="badge ${badgeCls}">${badgeText}</span></span>
+      <span class="comp-link-icon">\u2197</span>
+    </a>`;
+  }).join('');
+}
+
+// Info panel toggles
+document.querySelectorAll('.info-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    const isOpen = target.classList.contains('open');
+    target.classList.toggle('open');
+    btn.classList.toggle('active');
+  });
+});
+
+// Power info panel toggle (inline, always-visible button)
+const powerField = document.querySelector('#powerBtns').closest('.field');
+const powerInfoToggle = document.createElement('button');
+powerInfoToggle.className = 'info-btn';
+powerInfoToggle.textContent = '?';
+powerInfoToggle.title = 'Engine details';
+powerInfoToggle.style.cssText = 'position:absolute;right:0;top:0;';
+powerField.style.position = 'relative';
+powerField.querySelector('label').appendChild(Object.assign(document.createElement('span'), { style: 'display:inline-block;width:28px' }));
+powerField.appendChild(powerInfoToggle);
+powerInfoToggle.addEventListener('click', () => {
+  const panel = document.getElementById('powerInfo');
+  panel.classList.toggle('open');
+  powerInfoToggle.classList.toggle('active');
+});
+
+// Wire up controls
+document.getElementById('year').addEventListener('input', e => {
+  state.year = +e.target.value;
+  document.getElementById('yearVal').textContent = state.year;
+  update();
+});
+
+document.getElementById('mileage').addEventListener('input', e => {
+  state.mileage = +e.target.value;
+  document.getElementById('mileageVal').textContent = state.mileage.toLocaleString('en-GB');
+  update();
+});
+
+function setupSegments(containerId, stateKey) {
+  const btns = document.querySelectorAll(`#${containerId} button`);
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const val = btn.dataset.val;
+      state[stateKey] = isNaN(+val) ? val : +val;
+      update();
+    });
+  });
+}
+
+setupSegments('specBtns', 'spec');
+setupSegments('trimBtns', 'trim');
+setupSegments('powerBtns', 'power');
+
+['automatic', 'highRoof', 'fourMotion'].forEach(id => {
+  document.getElementById(id).addEventListener('change', e => {
+    state[id] = e.target.checked;
+    update();
+  });
+});
+
+// Initial render
+update();
+</script>
+</body>
+</html>
